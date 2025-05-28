@@ -1,14 +1,14 @@
 import fs from "fs";
 import path from "path";
-import {fileURLToPath} from "url"; // importa o caminho do arquivo
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url); // pega o caminho do arquivo
-const __dirname = path.dirname(__filename); // pega o caminho da pasta
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const logsDir = path.join(__dirname, "../logs"); 
+const logsDir = path.join(__dirname, "../logs");
 const logFile = path.join(logsDir, "requests.json");
 
-// Garante que a pasta e o arquivo exista
+// Garante que a pasta e o arquivo existem
 function ensureLogFile() {
     if (!fs.existsSync(logsDir)) {
         fs.mkdirSync(logsDir);
@@ -19,9 +19,8 @@ function ensureLogFile() {
     }
 }
 
-
-// Isso é uma Middleware, geralmente com um next, verifica o arquivo no meio do caminho.
-function logger (request, response, next) {
+// Middleware para verificar se a pasta e o arquivo existem
+function logger(request, response, next) {
     ensureLogFile();
 
     const logData = {
@@ -29,33 +28,30 @@ function logger (request, response, next) {
         method: request.method,
         url: request.url,
         body: request.body
-    }; 
+    };
 
-
-    console.log("$[{logData.date}] - ${logData.method} - ${logData.url} - ${logData.body}");
+    console.log(`[${logData.date}] ${logData.method} ${logData.url}`);   // LOG
     
-
     fs.readFile(logFile, "utf-8", (erro, data) => {
         let logs = [];
 
         try {
             logs = JSON.parse(data || "[]");
-            
+        
         } catch {
             logs = [];
         }
 
-        logs.push (logData);
+        logs.push(logData);
 
         fs.writeFile(logFile, JSON.stringify(logs, null, 2), (erro) => {
-            if (erro){
-                console.error("Erro ao salvar o log:", erro);
+            if (erro) {
+                console.error("Erro ao salvar o log:", erro);   
             }
         });
     });
 
     next();
-
 }
 
 export default logger;

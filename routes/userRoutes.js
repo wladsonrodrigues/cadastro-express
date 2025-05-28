@@ -2,77 +2,89 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import bcrypt from "bcrypt";
-import {v4 as uuidv4} from "uuid"; // import {v4 as uu id} from "uuid";
-import {fileURLToPath} from "url"; // importa o caminho do arquivo
+import { v4 as uuidv4 } from "uuid";
+import { fileURLToPath } from "url";
 
-const router = express.Router(); // cria uma rota
-const __filename = fileURLToPath(import.meta.url); // pega o caminho do arquivo
-const __dirname = path.dirname(__filename); // pega o caminho da pasta
+const router = express.Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const usersFiles = path.join(__dirname, "../data/users.json"); // pega o caminho do arquivo
+const dataDir = path.join(__dirname, "../data");
+const usersFile = path.join(__dirname, "../data/users.json");
 
-// Garante que o arquivo exista, se o arquivo não existir cria o arquivo users.json se necessario
-if (!fs.existsSync(usersFiles)){
-    fs.writeFileSync(usersFiles, "[]");
+// Garante que a pasta e o arquivo existem
+function ensureUserFile() {
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir);
+    }
+
+    if (!fs.existsSync(usersFile)) {
+        fs.writeFileSync(usersFile, "[]");
+    }
 }
 
 router.post("/", async (request, response) => {
-    // Desestruturação dos dados enviado por post/ na requisição(Pegar os dados de um json e passar para uma variavel)
-    const {nome, email, senha} = request.body;
+    // Desestruturação dos dados enviados na requisição
+    const { nome, email, senha } = request.body;    
 
-    //Verifica os campos em brancos
-    if (!nome || !email || !senha){
-        return response.status(400).json({erro: "Nome, E-email e Senha sao obrigatorios"});
+    ensureUserFile();
+
+    // Verifica os campos em branco
+    if (!nome || !email || !senha) {
+        return response.status(400).json({
+            erro: "Nome, E-mail e Senha são obrigatórios"
+        });
     }
 
     try {
-        //Busca os usuários existentes
-        const data = fs.readFileSync(usersFiles, "utf-8");
-        const users = JSON.parse(data);
+        // Busca os usuários existentes
+        const data = fs.readFileSync(usersFile, "utf-8");
+        const users = JSON.parse(data || "[]");
 
-        //Verifica se o email ja existe
-        const EmailExists = users.find(user => user.email === email);
-        if (EmailExists){
-             return response.status(409).json({
-                error: "Email ja cadastrado"
+        // Verifica se o E-mail já existe
+        const emailExists = users.find((user) => user.email === email);
+
+        if (emailExists) {
+            return response.status(409).json({
+                erro: "E-mail já cadastrado"
             });
         }
 
-        // Gera o hash da senha
+        // Gera o Hash da Senha
         const hashedPassword = await bcrypt.hash(senha, 10);
+
+        // Cria o ID único
+        const id = uuidv4();
 
         // Cria um novo usuário
         const newUser = {
-            // id: uid(),
-            id: uuidv4,
-            nome: nome,
+            uid: id,
+            name: nome,
             email: email,
-            senha: hashedPassword,
-            createdAt: new Date().toLocaleDateString("pt-BR"),
-            updateAt: new Date().toLocaleDateString("pt-BR")
+            password: hashedPassword,
+            createdAt: new Date().toLocaleDateString(),
+            updatedAt: new Date().toLocaleDateString()
         };
 
-        // Adiciona o novo usuário ao array de usuários
+        // Adiciona o novo usuário no array (lista de usuários)
         users.push(newUser);
 
-        //Salva no arquivo
-        fs.writeFileSync(usersFiles, JSON.stringify(users, null, 2));
+        // Salva no arquivo
+        fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 
-        //Remove a senha do retorno (não mostra a senha na tela)
-        const {senha: _, ...userWithoutPassword} = newUser;
+        // Remove a senha do retorno (não mostra a senha na tela)
+        const { senha: _, ...userWithoutPassword } = newUser;
 
         response.status(201).json({
-            mensagem: "Usuario cadastrado com sucesso!",
+            mensagem: "Usuário cadastrado com sucesso!",
             usuario: userWithoutPassword
         });
 
-
-    } catch (erro) {
-        console.error("Erro ao cadastrar o usuario:", erro);
+    } catch(erro) {
+        console.error("Erro ao criar usuário:", erro);
         response.status(500).json({
-            error: "Erro ao cadastrar o usuario"
+            erro: "Erro ao criar usuário."
         });
-        
     }
 });
 

@@ -1,0 +1,18 @@
+[
+  {
+    "uid": "030e1092-0ad3-4c0f-9e98-8aa5757b95be",
+    "name": "wladson",
+    "email": "wladsonrp64@gmail.com",
+    "password": "$2b$10$RbnXriJpRaEDdP6c835j.OhM8tMVf6lDDZVBwn2hwJddhp0TDCnPC",
+    "createdAt": "28/05/2025",
+    "updatedAt": "28/05/2025"
+  },
+  {
+    "uid": "c259a293-c641-45d4-a10e-056ce266b92c",
+    "name": "wladson",
+    "email": "wladsonrp64@gmail.com4",
+    "password": "$2b$10$A5H23ie8j/yY6jtqYQDOeOfT4f8HozW6zrhqxv87WmnRbDyT/OJ5q",
+    "createdAt": "28/05/2025",
+    "updatedAt": "28/05/2025"
+  }
+]
